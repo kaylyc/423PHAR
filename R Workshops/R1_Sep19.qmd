@@ -16,6 +16,7 @@ ns <- 10000
 
 means <- total_samples <- c()
 
+#Cauchy distribution does not work with CLT --> cauchy has infinite variance
 for(i in 1:ns){
   samples <- rcauchy(n=20, location= 0, scale= 1)
   total_samples <- append(total_samples,samples)
