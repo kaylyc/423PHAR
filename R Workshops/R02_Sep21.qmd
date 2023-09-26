@@ -850,11 +850,36 @@ You will learn about many other geoms for visualizing distributions of variables
     Which variables are numerical?
     (Hint: Type `?mpg` to read the documentation for the dataset.) How can you see this information when you run `mpg`?
 
+    There are 6 categorical variables (manufacturer, model, trans, drv, fl, class).
+    The other 5 variables are numerical.
+
+    ```{r}
+    glimpse(mpg)
+    ```
+
 2.  Make a scatterplot of `hwy` vs. `displ` using the `mpg` data frame.
     Next, map a third, numerical variable to `color`, then `size`, then both `color` and `size`, then `shape`.
     How do these aesthetics behave differently for categorical vs. numerical variables?
 
+    Shape is for categorical variables.
+    Colour can give a gradient but visually can be hard to distinguish.
+
+    ```{r}
+    ggplot(mpg, aes(x = hwy, y = displ)
+    ) +
+      geom_point()
+
+    ggplot(mpg, aes(x = hwy, y = displ)
+    ) +
+      geom_point(aes(colour = displ, size = cyl, shape = hwy))
+    ```
+
 3.  In the scatterplot of `hwy` vs. `displ`, what happens if you map a third variable to `linewidth`?
+
+    ```{r}
+    ggplot(mpg, aes(x = hwy, y = displ)) +
+      geom_point(linewidth = "cyl")
+    ```
 
 4.  What happens if you map the same variable to multiple aesthetics?
 
