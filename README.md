@@ -9,5 +9,3 @@ I'm a fourth year student studying pharmaceutical sciences at UBC and I'll be do
 * collecting cute trinkets
 
 I look forward to learning from you this term☀️ [Email me!](mailto:kaylyc1@gmail.com) 
-
-HI testing
