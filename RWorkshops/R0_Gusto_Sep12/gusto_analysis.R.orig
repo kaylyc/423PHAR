@@ -4,7 +4,9 @@ library(tidyverse)
 
 df <- read_csv("./data/gusto.csv")
 
+<<<<<<< HEAD
 ggplot(data=df,aes(x=age,col=sex,fill=sex))+geom_histogram()
+=======
 table(df$tx)
 
 table(df$day30)
@@ -57,13 +59,17 @@ library(mosaic)
 oddsRatio()
 
 #|----OLD histogram by sex------
+>>>>>>> a75a0cb (Update R Workshop)
 
 df %>% group_by(sex) %>% summarise(mean(age),sd(age))
 
 t.test(age~sex,data=df)
 
+<<<<<<< HEAD
+=======
 ggplot(data=df,aes(x=age,col=sex,fill=sex))+geom_histogram()
 
+>>>>>>> a75a0cb (Update R Workshop)
 hist(df$age)
 
 
