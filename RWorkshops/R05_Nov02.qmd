@@ -1,0 +1,137 @@
+---
+title: "Outliers and missing data"
+author: Tae Yoon Lee
+editor: visual
+format: pdf
+---
+
+```{r}
+# data manipulation
+library(tidyverse)
+# robust statistics
+library(robustbase)
+library(robust)
+library(coxrobust)
+library(survival)
+# missing data imputation
+library(missForest)
+```
+
+# Learning objectives
+
+-   Learn how to deal with outliers
+
+-   Learn how to deal with missing data
+
+# Outliers
+
+"An outlier is an observation that lies an abnormal distance from other values in a random sample from a population. In a sense, this definition leaves it up to the analyst (or a consensus process) to decide what will be considered abnormal. Before abnormal observations can be singled out, it is necessary to characterize normal observations." <https://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm>
+
+For instance, a disease outbreak can be viewed as an outlier.
+
+## Method 1: Measurement and data entry errors
+
+Define a range of possible values that a variable can take and identify observations that lie outside of the range as outliers. Then treat them as "missing."
+
+For example, the height of a modern human cannot be more than 3m.
+
+Always use this method first.
+
+## Method 2: Data-driven approach
+
+Define the norm based on the data.
+
+### Univariate case: boxplot
+
+```{r dummy example}
+set.seed(1)
+sample_norm <- rnorm(1000)
+boxplot(sample_norm)
+```
+
+Observations that lie beyond the outer fences are outliers. But are they?
+
+-   exploratory tool to examine outliers case by case
+
+These data-driven methods depend on the notion of distance between observations. Defining the distance becomes complicated with mixed types of data (continuous, categorical, ordinal, etc). I recommend these tools for exploratory purposes (e.g., to help you identify *potential outliers* that can be examined case-by-case).
+
+## Method 3: Model-based approach (advanced)
+
+Robust statistics is a branch of statistics dedicated to dealing with outliers. Outliers are handled and identified simultaneously by robust statistical methods. The basic idea is to place a smaller weight (\<1) on "outliers" instead of treating all observations equally with a weight of 1.
+
+-   further from norm = less weight
+
+-   look \@ residual --\> less weight on residuals
+
+```{r linear}
+oridnary_lm <- lm(Y~.,data=coleman)
+plot(oridnary_lm$residuals) # extreme residuals at 3 and 18
+robust_lm <- lmrob(Y ~ ., data=coleman, setting = "KS2014")
+plot(residuals(robust_lm) ~ weights(robust_lm, type="robustness")) 
+data.frame(ordinary = coef(oridnary_lm),robust=coef(robust_lm))
+```
+
+```{r count poisson}
+data(epilepsy)
+ordinary_poisson <- glm(Ysum~ Age10 + Base4*Trt,family=poisson,data=epilepsy)
+robust_poisson <- glmrob(Ysum~ Age10 + Base4*Trt,family=poisson,data=epilepsy)
+plot(residuals(robust_poisson,type = "deviance") ~ weights(robust_poisson, type="robustness")) 
+data.frame(ordinary = coef(ordinary_poisson),robust=coef(robust_poisson))
+```
+
+```{r survival cox}
+set.seed(1)
+df_cox <- gen_data(300, c(1, 0.1, 2), cont = 0.05, p.censor = 0.30)
+ordinary_cox <- coxph(Surv(time,status)~ X1 + X2 + X3, data = df_cox)
+robust_cox <- coxr(Surv(time, status) ~ X1 + X2 + X3, data = df_cox , trunc = 0.9)
+data.frame(ordinary = coef(ordinary_cox),robust=robust_cox$coefficients)
+```
+
+See whether a robust method is available for your model: <https://cran.r-project.org/web/views/Robust.html>.
+
+# Missing data
+
+It is critical to determine the ***causes*** of missing data. There are three main types:
+
+1.  Missing Completely At Random (MCAR): missingness happens at random (difficult to defend this in observational data; easier in a controlled setting).
+2.  Missing At Random (MAR): missingness depends on observed data.
+3.  Missing Not At Random (MNAR): missingness depends on unobserved data.
+
+Examples:
+
+1.  Students miss class due to illness.
+2.  Students get sick on the day of an exam and you have their information on SES, grades and past history.
+
+For more info, see <https://doi.org/10.1093/jpepsy/jst048>.
+
+## MCAR
+
+There is no bias associated with MCAR. So you can simply exclude the observations with missing data for your analysis.
+
+## MAR
+
+There will be bias if you simply exclude observations with missing data. MAR implies that you can use the observed data to impute the missing data. The most common imputation method is multiple imputation by chained equations. For our class, I recommend imputation by [**missForest**]{.underline} that provides you a [**single imputed dataset**]{.underline}. Without going into the details of the algorithm, what you want to see is that OOBerror is close to 0.
+
+```{r missforest}
+data(iris)
+set.seed(1)
+iris.mis <- prodNA(iris, noNA = 0.2)
+summary(iris.mis)
+
+iris.imp <- missForest(iris.mis,variablewise = T)
+iris.imp$OOBerror
+#Last row should be close to 0 if good imputation model
+```
+
+## MNAR
+
+There are recent methods for handling MNAR but are too advanced for our class.
+
+# Caveat
+
+We have learned how to deal with outliers and missing data separately. In practice, both problems often occur simultaneously, and there is not a well-known method for this joint problem. An ideal method would be an imputation method that is robust to outliers. My suggestion is to use a-priori knowledge to deal with outliers and then use an imputation method for missing data.
+
+# In-class activity
+
+1.  Identify any potential outliers in your dataset.
+2.  Identify missing data. If so, postulate an underlying mechanism for missingness (DAG might be useful).
